@@ -11,6 +11,11 @@
 html,body{width:100%;height:100%;overflow:hidden;background:var(--night);font-family:'Cormorant Garamond',serif;color:var(--star);}
 #stars-canvas{position:fixed;inset:0;pointer-events:none;z-index:1;}
 
+/* CSS STARS — visible instantly before JS loads */
+#css-stars{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden;touch-action:none;}
+.cs{position:absolute;border-radius:50%;background:#fff;animation:cs-twinkle var(--cd,3s) var(--co,0s) ease-in-out infinite alternate;}
+@keyframes cs-twinkle{from{opacity:0.08;transform:scale(0.7);}to{opacity:var(--cm,0.9);transform:scale(1.2);}}
+
 .screen{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.8s ease;z-index:10;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:clamp(10px,2.5vw,22px);}
 .screen.active{opacity:1;pointer-events:all;}
 
@@ -34,10 +39,10 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--night);font-fa
 @keyframes mirror-bg-pulse{0%,100%{transform:scale(0.85);opacity:0.45;}50%{transform:scale(1.35);opacity:1;}}
 .mirror-wrap{position:relative;display:flex;flex-direction:column;align-items:center;z-index:2;}
 .mirror-frame{position:relative;width:min(340px,78vw);aspect-ratio:3/4;display:flex;flex-direction:column;align-items:center;justify-content:center;}
-.mirror-svg{position:absolute;inset:0;width:100%;height:100%;}
-.mirror-content{position:relative;z-index:2;display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2.5vw,22px);padding:22% 15% 16%;}
-.mirror-question{font-family:'IM Fell English',serif;font-style:italic;font-size:clamp(0.95rem,2.8vw,1.35rem);color:var(--gold-light);text-align:center;line-height:1.6;text-shadow:0 0 20px rgba(201,168,76,0.5);}
-.magic-btn{width:clamp(52px,9vw,68px);height:clamp(52px,9vw,68px);border-radius:50%;border:2px solid var(--gold);background:rgba(201,168,76,0.1);color:var(--gold-light);font-size:clamp(1.3rem,2.8vw,2rem);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:pulse-btn 2s ease-in-out infinite;-webkit-appearance:none;}
+.mirror-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+.mirror-content{position:relative;z-index:5;display:flex;flex-direction:column;align-items:center;gap:clamp(12px,2.5vw,22px);padding:22% 15% 16%;}
+.mirror-question{font-family:'IM Fell English',serif;font-style:italic;font-size:clamp(0.95rem,2.8vw,1.35rem);color:var(--gold-light);text-align:center;line-height:1.6;text-shadow:0 0 20px rgba(201,168,76,0.5);pointer-events:none;}
+.magic-btn{width:clamp(52px,9vw,68px);height:clamp(52px,9vw,68px);border-radius:50%;border:2px solid var(--gold);background:rgba(201,168,76,0.1);color:var(--gold-light);font-size:clamp(1.3rem,2.8vw,2rem);cursor:pointer;display:flex;align-items:center;justify-content:center;animation:pulse-btn 2s ease-in-out infinite;-webkit-appearance:none;position:relative;z-index:10;touch-action:manipulation;}
 @keyframes pulse-btn{0%,100%{box-shadow:0 0 10px rgba(201,168,76,0.3);}50%{box-shadow:0 0 30px rgba(201,168,76,0.8),0 0 60px rgba(201,168,76,0.4);}}
 .fly-spark{position:absolute;font-size:var(--s,1rem);pointer-events:none;animation:fly-anim var(--d,6s) linear infinite;opacity:0;}
 @keyframes fly-anim{0%{transform:translate(var(--x0),var(--y0)) scale(0.5) rotate(0deg);opacity:0;}10%{opacity:1;}90%{opacity:0.8;}100%{transform:translate(var(--x1),var(--y1)) scale(1.2) rotate(360deg);opacity:0;}}
@@ -147,7 +152,20 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--night);font-fa
 </style>
 </head>
 <body>
+<div id="css-stars"></div>
 <canvas id="stars-canvas"></canvas>
+<script>
+(function(){
+  const c=document.getElementById('css-stars');
+  for(let i=0;i<160;i++){
+    const s=document.createElement('div');s.className='cs';
+    const sz=(Math.random()*2.2+0.4).toFixed(1);
+    const gold=Math.random()>0.88?'background:'+(Math.random()>0.5?'#f0d080':'#c9a84c')+';':'';
+    s.style.cssText=`width:${sz}px;height:${sz}px;left:${(Math.random()*100).toFixed(1)}%;top:${(Math.random()*100).toFixed(1)}%;--cd:${(2+Math.random()*4).toFixed(1)}s;--co:${(Math.random()*5).toFixed(1)}s;--cm:${(0.5+Math.random()*0.5).toFixed(2)};${gold}`;
+    c.appendChild(s);
+  }
+})();
+</script>
 <audio id="bgmusic" loop><source src="song.mp3" type="audio/mpeg"></audio>
 <div id="lightbox"><button class="lb-close" onclick="closeLightbox()">✕</button><img id="lb-img" src="" alt=""></div>
 <div id="confetti-container" style="position:fixed;inset:0;pointer-events:none;z-index:8000;"></div>
@@ -483,13 +501,19 @@ let currentScreen=null;
 const music=document.getElementById('bgmusic');let musicStarted=false;
 function startJourney(){if(!musicStarted){music.play().catch(()=>{});musicStarted=true;}showScreen('screen2a');}
 function showScreen(id){
-  if(currentScreen)document.getElementById(currentScreen).classList.remove('active');
-  currentScreen=id;document.getElementById(id).classList.add('active');
+  if(currentScreen){const prev=document.getElementById(currentScreen);if(prev)prev.classList.remove('active');}
+  currentScreen=id;
+  const el=document.getElementById(id);
+  if(el)el.classList.add('active');
   if(id==='screen5')buildGallery();
   if(id==='screen3a')startThunder();
   if(id==='screen6')setTimeout(launchConfetti,500);
 }
-window.addEventListener('load',()=>showScreen('screen1'));
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',()=>showScreen('screen1'));
+}else{
+  showScreen('screen1');
+}
 
 // THUNDER
 function startThunder(){
