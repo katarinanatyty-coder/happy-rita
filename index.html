@@ -279,10 +279,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--night);font-fa
     <!-- Pulsing mirror glow behind gallery -->
     <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(500px,100vw);aspect-ratio:1;border-radius:50%;background:radial-gradient(ellipse,rgba(201,168,76,0.1) 0%,transparent 65%);animation:mirror-bg-pulse 4s ease-in-out infinite;pointer-events:none;z-index:0;"></div>
 
-    <div class="gallery-slider" id="gallerySlider" onclick="galNext()">
-      <!-- slides injected by JS -->
-      <div class="gallery-tap-zone"><span class="tap-arrow" id="tapArrow">›</span></div>
-    </div>
+    <div class="gallery-slider" id="gallerySlider"></div>
 
     <div class="gal-dots" id="galDots"></div>
 
@@ -475,8 +472,12 @@ function buildGallery(){
     d.className='gal-dot'+(i===0?' active':'');
     dots.appendChild(d);
   });
-  // tap zone stays on top
-  slider.appendChild(document.getElementById('gallerySlider').querySelector('.gallery-tap-zone'));
+  // tap zone last so it stays on top
+  const tz=document.createElement('div');
+  tz.className='gallery-tap-zone';
+  tz.innerHTML='<span class="tap-arrow" id="tapArrow">›</span>';
+  tz.onclick=galNext;
+  slider.appendChild(tz);
 }
 function galNext(){
   const slides=document.querySelectorAll('.gallery-slide'),dots=document.querySelectorAll('.gal-dot');
